@@ -3,27 +3,36 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, workspaces
+from app.api import auth, documents, workspaces
 from app.core.config import settings
 from app.core.errors import install_error_handlers
 from app.core.logging import RequestContextMiddleware, configure_logging, log
 from app.db.mongo import close_mongo, connect_mongo, get_client
 from app.db.redis import close_redis, connect_redis, get_redis
+from app.services.ingestion.document_service import ensure_document_indexes
+from app.storage import init_storage
+from app.workers.queue import close_pool
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     configure_logging()
     await connect_mongo()
-    # Redis is optional for now — Phase 1 only needs it for /health. Skip it if
-    # unreachable instead of blocking startup. TODO: make required once caching /
-    # rate limiting land (Phase 8).
+    await ensure_document_indexes()
+    # Redis is optional for now — Phase 1 only needs it for /health, Phase 2 for the
+    # job queue. Skip it if unreachable instead of blocking startup.
+    # TODO: make required once caching / rate limiting land (Phase 8).
     try:
         await connect_redis(retries=1)
     except Exception as exc:  # noqa: BLE001
         log.warning("redis_unavailable_skipping", error=str(exc))
+    try:
+        init_storage()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("storage_unavailable_skipping", error=str(exc))
     log.info("startup_complete", env=settings.app_env)
     yield
+    await close_pool()
     await close_mongo()
     await close_redis()
 
@@ -43,6 +52,7 @@ def create_app() -> FastAPI:
     install_error_handlers(app)
     app.include_router(auth.router)
     app.include_router(workspaces.router)
+    app.include_router(documents.router)
 
     @app.get("/health", tags=["meta"])
     async def health() -> dict:

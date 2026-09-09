@@ -36,7 +36,7 @@ cd backend
 .venv/Scripts/python -m ruff check app tests
 ```
 
-## Endpoints (Phase 1)
+## Endpoints
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
@@ -47,8 +47,24 @@ cd backend
 | POST | `/api/workspaces` | Bearer | `{name}` → workspace (201) |
 | GET | `/api/workspaces` | Bearer | workspaces the caller owns / belongs to |
 | GET | `/api/workspaces/{id}` | Bearer | 400 bad id · 403 not a member · 404 missing |
+| POST | `/api/workspaces/{id}/documents` | member | multipart `file` + optional `metadata` (JSON) → doc (202) |
+| GET | `/api/workspaces/{id}/documents` | member | list, optional `?status=` |
+| GET | `/api/documents/{id}` | member | one doc — 403 if not a member of its workspace |
+| DELETE | `/api/documents/{id}` | member | removes record + stored original (204) |
 
 Errors: `{"error": {"code": "...", "message": "..."}}`. Interactive docs at `/docs`.
+
+### Phase 2 — ingestion
+
+Upload stores the original in object storage, creates a `documents` record at
+`status:"uploaded"`, and enqueues an **arq** job (`process:{id}`, deduped). The
+worker extracts + normalizes text, stashes structured blocks in Redis for Phase 3,
+and flips status to `processed` (or `failed` with a safe `processing_error`).
+Chunking / embeddings are Phase 3.
+
+Run the worker: `arq app.workers.settings.WorkerSettings` (its own process; `docker
+compose` starts it plus MinIO). If Redis is unreachable the upload still succeeds —
+the doc stays `uploaded` until a worker + queue are available.
 
 ## Layout
 

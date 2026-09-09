@@ -25,7 +25,20 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-secret-change-me"
     access_token_expire_minutes: int = 60 * 24
 
-    # Later phases add their own keys here (Pinecone, LLM, object storage, ...).
+    # Object storage (S3-compatible; MinIO in dev).
+    object_storage_endpoint: str = "http://localhost:9000"
+    object_storage_bucket: str = "ekip-documents"
+    object_storage_access_key: str = "minioadmin"
+    object_storage_secret_key: str = "minioadmin"
+    object_storage_region: str = "us-east-1"
+
+    max_upload_mb: int = 25
+
+    # Later phases add their own keys here (Pinecone, LLM, ...).
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.max_upload_mb * 1024 * 1024
 
     @property
     def cors_origin_list(self) -> list[str]:
