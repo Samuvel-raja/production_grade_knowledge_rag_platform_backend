@@ -18,9 +18,12 @@ class DocumentDoc(BaseModel):
     workspace_id: PyObjectId
     filename: str                       # sanitized, stored name
     original_file_name: str             # as uploaded
-    storage_key: str
     file_type: FileType
     file_size: int
+    # Who uploaded it — used at ingestion time to embed with *their* configured
+    # provider (see app.embeddings.resolver). None for documents uploaded before
+    # this existed; those fall back to the server-wide embedder.
+    uploaded_by: PyObjectId | None = None
     page_count: int | None = None
     chunk_count: int | None = None      # set in Phase 3
     status: DocStatus = "uploaded"

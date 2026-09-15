@@ -25,16 +25,44 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-secret-change-me"
     access_token_expire_minutes: int = 60 * 24
 
-    # Object storage (S3-compatible; MinIO in dev).
-    object_storage_endpoint: str = "http://localhost:9000"
-    object_storage_bucket: str = "ekip-documents"
-    object_storage_access_key: str = "minioadmin"
-    object_storage_secret_key: str = "minioadmin"
-    object_storage_region: str = "us-east-1"
+    # Object storage was here — removed for now, see
+    # plan/backend/phase-2b-storage-and-workers.md. Uploaded bytes are held in
+    # memory for one request/background-task and then discarded.
 
     max_upload_mb: int = 25
 
-    # Later phases add their own keys here (Pinecone, LLM, ...).
+    # Vector search (Pinecone serverless).
+    pinecone_api_key: str = ""
+    pinecone_index: str = "enterprise-rag"
+    pinecone_cloud: str = "aws"
+    pinecone_region: str = "us-east-1"
+
+    # Embeddings.
+    embedding_provider: str = "openai"
+    embedding_api_key: str = ""
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dim: int = 1536
+
+    # Chunking.
+    chunk_strategy: str = "structural"
+    chunk_target_tokens: int = 512
+    chunk_overlap_tokens: int = 64
+    max_chunk_metadata_chars: int = 4000
+
+    # LLM (Phase 4) — server-wide default, used when a user hasn't set their own.
+    llm_provider: str = "openai"
+    llm_api_key: str = ""
+    llm_model: str = "gpt-4o-mini"
+
+    # Symmetric key (Fernet, urlsafe-base64, 32 raw bytes) used to encrypt
+    # per-workspace LLM API keys at rest. Generate with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # Required before a workspace can save its own LLM config.
+    secrets_encryption_key: str = ""
+
+    rag_top_k: int = 5
+
+    # Later phases add their own keys here (query rewriting, reranking, ...).
 
     @property
     def max_upload_bytes(self) -> int:

@@ -4,19 +4,14 @@ from typing import Any
 
 from bson import ObjectId
 
-from app.core.errors import AppError, BadRequestError, NotFoundError
+from app.core.config import settings
+from app.core.errors import BadRequestError, NotFoundError
 from app.core.logging import log
 from app.db.mongo import get_db
 from app.models.document import DocStatus, DocumentDoc
 from app.services.ingestion.validation import validate_upload
-from app.storage import StorageError, get_storage
+from app.vectorstore import VectorStoreError, get_vectorstore
 
-_CONTENT_TYPE = {
-    "pdf": "application/pdf",
-    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "txt": "text/plain",
-    "md": "text/markdown",
-}
 _SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
 
 
@@ -38,21 +33,15 @@ async def create_document(
     data: bytes,
     metadata: dict[str, Any] | None,
     max_bytes: int,
+    uploaded_by: str | None = None,
 ) -> DocumentDoc:
+    """Validate and record a document. The bytes are not persisted anywhere —
+    they're handed straight to background processing for this one request and
+    then discarded. See plan/backend/phase-2b-storage-and-workers.md."""
     file_type, size = validate_upload(filename, data, max_bytes)
 
     doc_id = ObjectId()
     stored_name = _sanitize(filename)
-    storage_key = f"workspaces/{workspace_id}/documents/{doc_id}/{stored_name}"
-
-    # Store the original first — only create the record once the bytes are safe.
-    try:
-        await get_storage().put(storage_key, data, _CONTENT_TYPE[file_type])
-    except StorageError as exc:
-        log.error("storage_put_failed", storage_key=storage_key, error=str(exc))
-        raise AppError(
-            "Storage is temporarily unavailable", code="storage_unavailable", status_code=503
-        ) from exc
 
     now = datetime.now(UTC)
     record = {
@@ -60,9 +49,9 @@ async def create_document(
         "workspace_id": ObjectId(workspace_id),
         "filename": stored_name,
         "original_file_name": filename,
-        "storage_key": storage_key,
         "file_type": file_type,
         "file_size": size,
+        "uploaded_by": ObjectId(uploaded_by) if uploaded_by else None,
         "page_count": None,
         "chunk_count": None,
         "status": "uploaded",
@@ -93,12 +82,12 @@ async def get_document(document_id: str) -> DocumentDoc:
 
 
 async def delete_document(doc: DocumentDoc) -> None:
-    try:
-        await get_storage().delete(doc.storage_key)
-    except StorageError as exc:  # object may already be gone; don't block the record delete
-        log.warning("storage_delete_failed", storage_key=doc.storage_key, error=str(exc))
+    if settings.pinecone_api_key:
+        try:
+            await get_vectorstore().delete(filter={"document_id": doc.id})
+        except VectorStoreError as exc:
+            log.warning("vectorstore_delete_failed", document_id=doc.id, error=str(exc))
     await get_db().documents.delete_one({"_id": ObjectId(doc.id)})
-    # Phase 3: also delete vectors where metadata.document_id == doc.id
 
 
 async def set_status(

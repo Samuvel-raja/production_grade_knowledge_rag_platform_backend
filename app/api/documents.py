@@ -1,19 +1,22 @@
 import json
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
 
-from app.api.deps import authorize_document, authorize_workspace
+from app.api.deps import authorize_document, authorize_workspace, get_current_user
 from app.core.config import settings
 from app.core.errors import AppError, BadRequestError
 from app.models.document import DocumentDoc
+from app.models.user import UserDoc
 from app.models.workspace import WorkspaceDoc
+from app.schemas.chunk import ChunkListOut, ChunkPreview
 from app.schemas.document import DocumentOut
 from app.services.ingestion.document_service import (
     create_document,
     delete_document,
     list_documents,
 )
-from app.workers.queue import enqueue_process_document
+from app.services.ingestion.processing import process_document_now
+from app.vectorstore import VectorStoreError, get_vectorstore
 
 router = APIRouter(tags=["documents"])
 
@@ -36,9 +39,11 @@ def _parse_metadata(raw: str | None) -> dict:
     status_code=202,
 )
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     metadata: str | None = Form(default=None),
     workspace: WorkspaceDoc = Depends(authorize_workspace),
+    user: UserDoc = Depends(get_current_user),
 ) -> DocumentOut:
     meta = _parse_metadata(metadata)
 
@@ -56,8 +61,11 @@ async def upload_document(
         data=data,
         metadata=meta,
         max_bytes=settings.max_upload_bytes,
+        uploaded_by=user.id,
     )
-    await enqueue_process_document(doc.id)
+    # In-process background task — no object storage, no queue, no worker. The
+    # bytes are only ever held here; see plan/backend/phase-2b-storage-and-workers.md.
+    background_tasks.add_task(process_document_now, doc.id, data)
     return DocumentOut.of(doc)
 
 
@@ -80,3 +88,31 @@ async def get_one_document(doc: DocumentDoc = Depends(authorize_document)) -> Do
 @router.delete("/api/documents/{document_id}", status_code=204)
 async def delete_one_document(doc: DocumentDoc = Depends(authorize_document)) -> None:
     await delete_document(doc)
+
+
+@router.get("/api/documents/{document_id}/chunks", response_model=ChunkListOut)
+async def list_document_chunks(
+    limit: int = 20,
+    doc: DocumentDoc = Depends(authorize_document),
+) -> ChunkListOut:
+    limit = max(1, min(limit, 100))
+    if not settings.pinecone_api_key:
+        return ChunkListOut(chunks=[])
+    try:
+        items = await get_vectorstore().list_for_document(doc.id, limit=limit)
+    except VectorStoreError as exc:
+        raise AppError(
+            "Could not load chunks", code="vectorstore_unavailable", status_code=503
+        ) from exc
+
+    chunks = [
+        ChunkPreview(
+            id=item["id"],
+            chunk_index=item["metadata"].get("chunk_index", 0),
+            page=item["metadata"].get("page"),
+            section=item["metadata"].get("section"),
+            text=item["metadata"].get("text", ""),
+        )
+        for item in items
+    ]
+    return ChunkListOut(chunks=chunks)
