@@ -5,10 +5,10 @@ from app.core.errors import AppError
 from app.core.logging import log
 from app.models.user import UserDoc
 from app.rag.context import Citation, build_context
+from app.rag.embeddings import get_embedder_for_user
 from app.rag.embeddings.base import EmbeddingError
-from app.rag.embeddings.resolver import get_embedder_for_user
+from app.rag.llm import get_llm_for_user
 from app.rag.llm.base import LLMError
-from app.rag.llm.resolver import get_llm_for_user
 from app.rag.prompt import SYSTEM_PROMPT, build_user_prompt
 from app.rag.retrieval import retrieve_chunks
 
@@ -44,7 +44,7 @@ async def answer_question(
     Both the embedder and the LLM are resolved per-user: their own configured
     provider/key if they have one, else the server-wide default. For the
     embedder this only matters if the provider actually offers embeddings
-    (openai, gemini, openrouter) — see app.rag.embeddings.resolver for what a
+    (openai, gemini, openrouter) — see app.rag.embeddings for what a
     mismatched provider does to retrieval.
     """
     if not settings.pinecone_api_key:

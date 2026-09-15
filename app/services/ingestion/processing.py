@@ -17,8 +17,8 @@ from app.core.errors import NotFoundError
 from app.core.logging import log
 from app.db.redis import get_redis
 from app.models.document import DocumentDoc
+from app.rag.embeddings import get_embedder_for_user
 from app.rag.embeddings.base import EmbeddingError
-from app.rag.embeddings.resolver import get_embedder_for_user
 from app.rag.vectorstore import VectorItem, VectorStoreError, get_vectorstore
 from app.services.auth_service import get_user_by_id
 from app.services.ingestion.chunking import Chunk, get_chunker

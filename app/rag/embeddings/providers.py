@@ -5,7 +5,7 @@ from app.rag.embeddings.compatible_embedder import CompatibleEmbedder
 
 # Providers with an actual way to embed text. Groq has no embeddings endpoint
 # at all — a user on it falls back to the server-wide embedder (see
-# app.rag.embeddings.resolver). OpenRouter has no embeddings endpoint of its own
+# app.rag.embeddings). OpenRouter has no embeddings endpoint of its own
 # either, but it proxies OpenAI's models under OpenAI's own names — so an
 # OpenRouter user's *own* key/credits can still embed, via OpenRouter, using
 # OpenAI's embedding model.

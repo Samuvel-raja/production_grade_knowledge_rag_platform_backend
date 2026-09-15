@@ -47,8 +47,7 @@ each is easy to test and replace on its own.
 | **`base.py`** | The `Embedder` protocol (`embed(texts)`, `embed_query(text)`) and `EmbeddingError`. Any class with these two methods can be an embedder. |
 | **`compatible_embedder.py`** | `CompatibleEmbedder` — the one implementation, used for every provider (see below). Batches requests (96 texts per call), retries transient failures 3x, and can force its output to a fixed `dimensions` so different providers still fit the same Pinecone index. |
 | **`providers.py`** | `EMBEDDING_PROVIDERS` — which providers can embed at all, and their base URL + default model. Only **OpenAI**, **Gemini**, and **OpenRouter** (proxying OpenAI's model) are in here; **Groq has no embeddings endpoint**, full stop. `build_embedder(provider, api_key, ...)` builds a `CompatibleEmbedder` pointed at the right URL. |
-| **`resolver.py`** | `get_embedder_for_user(user)` — the actual decision: use the user's own provider if it supports embeddings, else the server-wide default (`EMBEDDING_API_KEY`), else `None`. Called both when a question is asked *and* when a document is ingested, so both sides use the same provider. |
-| **`__init__.py`** | `get_embedder()` — the single server-wide default embedder, built once from `.env` (`EMBEDDING_PROVIDER`/`EMBEDDING_API_KEY`/`EMBEDDING_MODEL`) and reused. |
+| **`__init__.py`** | Two getters: `get_embedder()` — the single server-wide default embedder, built once from `.env` (`EMBEDDING_PROVIDER`/`EMBEDDING_API_KEY`/`EMBEDDING_MODEL`) and reused. `get_embedder_for_user(user)` — the per-request decision: the user's own provider if it supports embeddings, else `get_embedder()`, else `None`. Called both when a question is asked *and* when a document is ingested, so both sides use the same provider. |
 
 **Why one class for every provider:** OpenAI, Gemini (via its OpenAI-compatibility
 endpoint) and OpenRouter (proxying OpenAI's model) all speak the same wire
@@ -66,9 +65,8 @@ queries can find it. Switching provider doesn't re-embed old documents.
 | **`base.py`** | The `LLM` protocol (`generate(system, prompt)`) and `LLMError`. |
 | **`compatible_llm.py`** | `CompatibleLLM` — the one implementation, same "one client, many providers via base_url" trick as the embedder. Retries 3x on any failure. |
 | **`providers.py`** | `PROVIDERS` — all four chat providers (OpenAI, Gemini, OpenRouter, Groq) with base URL + default model. `build_llm(...)` builds a `CompatibleLLM` pointed at the right one. |
-| **`resolver.py`** | `get_llm_for_user(user)` — user's own config wins, else the server default, else `None`. |
 | **`model_catalog.py`** | `list_models(provider, api_key)` — asks the *provider's own* `/models` endpoint what that key can actually use, so the Settings UI can offer a real dropdown instead of a hardcoded (and occasionally deprecated) model name. Gemini is the one that matters most here — its native API is the only one that reports what's actually available to a given key. |
-| **`__init__.py`** | `get_llm()` — the single server-wide default LLM, built once from `.env` (`LLM_PROVIDER`/`LLM_API_KEY`/`LLM_MODEL`). |
+| **`__init__.py`** | Two getters, same split as `embeddings/`: `get_llm()` — the single server-wide default LLM, built once from `.env` (`LLM_PROVIDER`/`LLM_API_KEY`/`LLM_MODEL`). `get_llm_for_user(user)` — the per-request decision: user's own config wins, else `get_llm()`, else `None`. |
 
 ## `vectorstore/` — where the vectors live
 

@@ -79,7 +79,8 @@ Gemini have their own embeddings endpoint; OpenRouter has none of its own but
 proxies OpenAI's embedding model under OpenAI's name, so an OpenRouter user's
 own key/credits still embed, via OpenRouter. Groq has no embeddings endpoint
 at all (not even proxied) — a Groq user falls back to the server-wide embedder
-for embedding only, chat still uses their own key (`app/rag/embeddings/resolver.py`).
+for embedding only, chat still uses their own key (`get_embedder_for_user` /
+`get_llm_for_user` in `app/rag/embeddings/__init__.py` / `app/rag/llm/__init__.py`).
 
 This also drives **ingestion**, not just querying: every `documents` row
 records `uploaded_by`, and processing embeds with *that user's* provider
@@ -180,9 +181,9 @@ app/
 ├── rag/                 everything retrieval-augmented-generation, together — not mixed
 │   │                     in with unrelated top-level folders
 │   ├── retrieval.py, context.py, prompt.py, pipeline.py
-│   ├── embeddings/       Embedder protocol, CompatibleEmbedder, providers.py, resolver.py (per-user)
+│   ├── embeddings/       Embedder protocol, CompatibleEmbedder, providers.py; get_embedder[_for_user] in __init__.py
 │   ├── vectorstore/      VectorStore protocol + PineconeStore
-│   └── llm/              LLM protocol, CompatibleLLM, providers.py, resolver.py (per-user), model_catalog.py
+│   └── llm/              LLM protocol, CompatibleLLM, providers.py, model_catalog.py; get_llm[_for_user] in __init__.py
 └── api/                deps.py, auth.py, workspaces.py, documents.py, search.py
 ```
 
