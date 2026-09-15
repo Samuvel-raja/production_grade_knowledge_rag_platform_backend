@@ -6,11 +6,14 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from app.rag.llm.base import LLMError
 
 
-class OpenAILLM:
-    """LLM backed by the OpenAI chat completions API.
+class CompatibleLLM:
+    """LLM for any provider that speaks the OpenAI chat-completions wire format —
+    OpenAI, Groq, OpenRouter natively, and Gemini via its OpenAI-compatibility
+    endpoint. Only `base_url`/model differ; see app.rag.llm.providers.
 
-    Swappable: any class implementing `LLM` (Anthropic, a local model server, ...)
-    can replace this behind `get_llm()` — nothing else in the RAG pipeline changes.
+    Swappable: any class implementing `LLM` (e.g. a provider with its own
+    non-compatible API) can replace this behind `get_llm()` — nothing else in
+    the RAG pipeline changes.
     """
 
     def __init__(
@@ -32,7 +35,7 @@ class OpenAILLM:
         return response.choices[0].message.content or ""
 
     # ponytail: retries every failure the same way instead of matching OpenAI's
-    # exception hierarchy exactly. Same trade-off as OpenAIEmbedder.
+    # exception hierarchy exactly. Same trade-off as CompatibleEmbedder.
     @retry(
         reraise=True,
         stop=stop_after_attempt(3),

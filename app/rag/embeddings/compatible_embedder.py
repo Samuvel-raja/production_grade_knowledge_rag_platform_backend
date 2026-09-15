@@ -8,11 +8,15 @@ from app.rag.embeddings.base import EmbeddingError
 _BATCH_SIZE = 96
 
 
-class OpenAIEmbedder:
-    """Embedder backed by the OpenAI embeddings API.
+class CompatibleEmbedder:
+    """Embedder for any provider that speaks the OpenAI embeddings wire format —
+    OpenAI itself, Gemini (via its OpenAI-compatibility endpoint), and
+    OpenRouter (proxying OpenAI's model). Only `base_url`/model differ; see
+    app.rag.embeddings.providers.
 
-    Swappable: any class implementing `Embedder` (e.g. a Cohere or local model
-    wrapper) can replace this behind `get_embedder()` — nothing else changes.
+    Swappable: any class implementing `Embedder` (e.g. a provider with its own
+    non-compatible API) can replace this behind `get_embedder()` — nothing
+    else changes.
     """
 
     dim = 1536

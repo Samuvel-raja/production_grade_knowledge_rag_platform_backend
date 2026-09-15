@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from app.rag.llm.base import LLM
-from app.rag.llm.openai_llm import OpenAILLM
+from app.rag.llm.compatible_llm import CompatibleLLM
 
 # OpenAI, Groq and OpenRouter all speak the OpenAI chat-completions wire format
 # natively; Google exposes the same format for Gemini via its OpenAI-compat
@@ -43,4 +43,4 @@ def default_model_for(provider: str) -> str:
 
 def build_llm(*, provider: str, api_key: str, model: str | None = None) -> LLM:
     info = PROVIDERS[provider]
-    return OpenAILLM(api_key=api_key, model=model or info.default_model, base_url=info.base_url)
+    return CompatibleLLM(api_key=api_key, model=model or info.default_model, base_url=info.base_url)

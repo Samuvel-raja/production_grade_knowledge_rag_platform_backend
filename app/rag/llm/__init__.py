@@ -1,6 +1,6 @@
 from app.core.config import settings
 from app.rag.llm.base import LLM, LLMError
-from app.rag.llm.openai_llm import OpenAILLM
+from app.rag.llm.compatible_llm import CompatibleLLM
 from app.rag.llm.providers import PROVIDERS, build_llm, default_model_for, is_supported_provider
 
 _llm: LLM | None = None
@@ -20,7 +20,7 @@ def get_llm() -> LLM:
 __all__ = [
     "LLM",
     "LLMError",
-    "OpenAILLM",
+    "CompatibleLLM",
     "PROVIDERS",
     "build_llm",
     "default_model_for",

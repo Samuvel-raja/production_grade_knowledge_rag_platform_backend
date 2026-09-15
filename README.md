@@ -70,7 +70,7 @@ Each user can pick their own provider + paste their own key (Settings → LLM
 provider in the frontend) — it's used for every `/search` call *they* make, in
 every workspace, instead of the server-wide default. OpenAI, Groq and
 OpenRouter all speak the OpenAI chat-completions format natively; Gemini is
-reached through Google's OpenAI-compatibility endpoint — so one `OpenAILLM`
+reached through Google's OpenAI-compatibility endpoint — so one `CompatibleLLM`
 class handles chat for all four, just swapping `base_url`/model
 (`app/rag/llm/providers.py`).
 
@@ -122,7 +122,7 @@ the upload).
 
 After extraction, processing chunks each block with `StructuralChunker`
 (sentence-packed windows of `CHUNK_TARGET_TOKENS` with `CHUNK_OVERLAP_TOKENS`
-overlap, page/section preserved per chunk), embeds the chunks (`OpenAIEmbedder`,
+overlap, page/section preserved per chunk), embeds the chunks (`CompatibleEmbedder`,
 `text-embedding-3-small`), and upserts them into Pinecone (`PineconeStore`) with
 `workspace_id`/`document_id`/`page`/`section`/`chunk_index` metadata. Re-running a
 document deletes its existing vectors first — safe to retry.
@@ -180,9 +180,9 @@ app/
 ├── rag/                 everything retrieval-augmented-generation, together — not mixed
 │   │                     in with unrelated top-level folders
 │   ├── retrieval.py, context.py, prompt.py, pipeline.py
-│   ├── embeddings/       Embedder protocol, OpenAIEmbedder, providers.py, resolver.py (per-user)
+│   ├── embeddings/       Embedder protocol, CompatibleEmbedder, providers.py, resolver.py (per-user)
 │   ├── vectorstore/      VectorStore protocol + PineconeStore
-│   └── llm/              LLM protocol, OpenAILLM, providers.py, resolver.py (per-user), model_catalog.py
+│   └── llm/              LLM protocol, CompatibleLLM, providers.py, resolver.py (per-user), model_catalog.py
 └── api/                deps.py, auth.py, workspaces.py, documents.py, search.py
 ```
 

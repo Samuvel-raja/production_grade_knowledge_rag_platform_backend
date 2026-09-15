@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from app.rag.embeddings.base import Embedder
-from app.rag.embeddings.openai_embedder import OpenAIEmbedder
+from app.rag.embeddings.compatible_embedder import CompatibleEmbedder
 
 # Providers with an actual way to embed text. Groq has no embeddings endpoint
 # at all — a user on it falls back to the server-wide embedder (see
@@ -48,7 +48,7 @@ def build_embedder(
     *, provider: str, api_key: str, model: str | None = None, dimensions: int | None = None
 ) -> Embedder:
     info = EMBEDDING_PROVIDERS[provider]
-    return OpenAIEmbedder(
+    return CompatibleEmbedder(
         api_key=api_key,
         model=model or info.default_model,
         base_url=info.base_url,
