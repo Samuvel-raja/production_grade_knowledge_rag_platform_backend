@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends
 from app.api.deps import authorize_workspace, get_current_user
 from app.models.user import UserDoc
 from app.models.workspace import WorkspaceDoc
+from app.rag.pipeline import answer_question
 from app.schemas.rag import AskRequest, AskResponse, CitationOut
-from app.services.rag.pipeline import answer_question
 
 router = APIRouter(tags=["search"])
 

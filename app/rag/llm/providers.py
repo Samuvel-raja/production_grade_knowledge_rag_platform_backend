@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from app.llm.base import LLM
-from app.llm.openai_llm import OpenAILLM
+from app.rag.llm.base import LLM
+from app.rag.llm.openai_llm import OpenAILLM
 
 # OpenAI, Groq and OpenRouter all speak the OpenAI chat-completions wire format
 # natively; Google exposes the same format for Gemini via its OpenAI-compat

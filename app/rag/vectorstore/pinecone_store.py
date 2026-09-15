@@ -4,7 +4,7 @@ import anyio
 from pinecone import Pinecone, ServerlessSpec
 from pinecone.exceptions import PineconeException
 
-from app.vectorstore.base import VectorItem, VectorStoreError
+from app.rag.vectorstore.base import VectorItem, VectorStoreError
 
 _UPSERT_BATCH = 100
 

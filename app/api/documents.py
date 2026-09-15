@@ -8,6 +8,7 @@ from app.core.errors import AppError, BadRequestError
 from app.models.document import DocumentDoc
 from app.models.user import UserDoc
 from app.models.workspace import WorkspaceDoc
+from app.rag.vectorstore import VectorStoreError, get_vectorstore
 from app.schemas.chunk import ChunkListOut, ChunkPreview
 from app.schemas.document import DocumentOut
 from app.services.ingestion.document_service import (
@@ -16,7 +17,6 @@ from app.services.ingestion.document_service import (
     list_documents,
 )
 from app.services.ingestion.processing import process_document_now
-from app.vectorstore import VectorStoreError, get_vectorstore
 
 router = APIRouter(tags=["documents"])
 

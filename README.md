@@ -72,21 +72,21 @@ every workspace, instead of the server-wide default. OpenAI, Groq and
 OpenRouter all speak the OpenAI chat-completions format natively; Gemini is
 reached through Google's OpenAI-compatibility endpoint — so one `OpenAILLM`
 class handles chat for all four, just swapping `base_url`/model
-(`app/llm/providers.py`).
+(`app/rag/llm/providers.py`).
 
 **Embeddings follow the same provider choice where possible** — OpenAI and
 Gemini have their own embeddings endpoint; OpenRouter has none of its own but
 proxies OpenAI's embedding model under OpenAI's name, so an OpenRouter user's
 own key/credits still embed, via OpenRouter. Groq has no embeddings endpoint
 at all (not even proxied) — a Groq user falls back to the server-wide embedder
-for embedding only, chat still uses their own key (`app/embeddings/resolver.py`).
+for embedding only, chat still uses their own key (`app/rag/embeddings/resolver.py`).
 
 This also drives **ingestion**, not just querying: every `documents` row
 records `uploaded_by`, and processing embeds with *that user's* provider
 (`app/services/ingestion/processing.py::_index_chunks`), so what indexed a
 document matches what a query with the same provider expects.
 
-**The catch, by design** (see `app/embeddings/providers.py`): a Pinecone index
+**The catch, by design** (see `app/rag/embeddings/providers.py`): a Pinecone index
 has one fixed vector dimension, and different providers' embeddings aren't
 points in a comparable space anyway. Mixing providers within a workspace means
 documents indexed under one provider become unsearchable — often a hard
@@ -152,7 +152,7 @@ question → embed_query (Embedder) → retrieve_chunks (workspace_id filter alw
          it") → {answer, citations, retrieved_count}
 ```
 
-`app/services/rag/{retrieval,context,prompt,pipeline}.py`. Every citation returned
+`app/rag/{retrieval,context,prompt,pipeline}.py`. Every citation returned
 is a chunk that was put in front of the LLM — validating that the *answer* actually
 used each one is Phase 7 (citation validation guardrail). No query rewriting, hybrid
 search, reranking or conversation memory yet — those are Phase 5/6, added without
@@ -173,14 +173,16 @@ app/
 ├── schemas/           request/response DTOs
 ├── services/
 │   ├── auth_service.py, workspace_service.py, user_llm_service.py
-│   ├── ingestion/
-│   │   ├── validation.py, loaders.py, normalize.py, document_service.py
-│   │   ├── processing.py    process_document_now — extract/chunk/embed/index, in-process
-│   │   └── chunking/        Chunker protocol + StructuralChunker
-│   └── rag/             retrieval.py, context.py, prompt.py, pipeline.py
-├── embeddings/         Embedder protocol, OpenAIEmbedder, providers.py, resolver.py (per-user)
-├── vectorstore/        VectorStore protocol + PineconeStore
-├── llm/                LLM protocol, OpenAILLM, providers.py, resolver.py (per-user)
+│   └── ingestion/
+│       ├── validation.py, loaders.py, normalize.py, document_service.py
+│       ├── processing.py    process_document_now — extract/chunk/embed/index, in-process
+│       └── chunking/        Chunker protocol + StructuralChunker
+├── rag/                 everything retrieval-augmented-generation, together — not mixed
+│   │                     in with unrelated top-level folders
+│   ├── retrieval.py, context.py, prompt.py, pipeline.py
+│   ├── embeddings/       Embedder protocol, OpenAIEmbedder, providers.py, resolver.py (per-user)
+│   ├── vectorstore/      VectorStore protocol + PineconeStore
+│   └── llm/              LLM protocol, OpenAILLM, providers.py, resolver.py (per-user), model_catalog.py
 └── api/                deps.py, auth.py, workspaces.py, documents.py, search.py
 ```
 

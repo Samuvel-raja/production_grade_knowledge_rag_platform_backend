@@ -1,9 +1,9 @@
 from app.core.config import settings
 from app.core.crypto import decrypt
-from app.embeddings import get_embedder
-from app.embeddings.base import Embedder
-from app.embeddings.providers import build_embedder, supports_embeddings
 from app.models.user import UserDoc
+from app.rag.embeddings import get_embedder
+from app.rag.embeddings.base import Embedder
+from app.rag.embeddings.providers import build_embedder, supports_embeddings
 
 
 async def get_embedder_for_user(user: UserDoc | None) -> Embedder | None:

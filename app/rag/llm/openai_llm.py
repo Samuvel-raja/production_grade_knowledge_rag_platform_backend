@@ -3,7 +3,7 @@ from typing import Any
 from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from app.llm.base import LLMError
+from app.rag.llm.base import LLMError
 
 
 class OpenAILLM:

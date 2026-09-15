@@ -1,6 +1,6 @@
 from app.core.config import settings
-from app.embeddings.base import Embedder, EmbeddingError
-from app.embeddings.openai_embedder import OpenAIEmbedder
+from app.rag.embeddings.base import Embedder, EmbeddingError
+from app.rag.embeddings.openai_embedder import OpenAIEmbedder
 
 _embedder: Embedder | None = None
 

@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.crypto import encrypt
 from app.core.errors import AppError, BadRequestError
 from app.db.mongo import get_db
-from app.llm.providers import default_model_for, is_supported_provider
+from app.rag.llm.providers import default_model_for, is_supported_provider
 
 
 async def set_llm_config(

@@ -16,15 +16,15 @@ from app.core.config import settings
 from app.core.errors import NotFoundError
 from app.core.logging import log
 from app.db.redis import get_redis
-from app.embeddings.base import EmbeddingError
-from app.embeddings.resolver import get_embedder_for_user
 from app.models.document import DocumentDoc
+from app.rag.embeddings.base import EmbeddingError
+from app.rag.embeddings.resolver import get_embedder_for_user
+from app.rag.vectorstore import VectorItem, VectorStoreError, get_vectorstore
 from app.services.auth_service import get_user_by_id
 from app.services.ingestion.chunking import Chunk, get_chunker
 from app.services.ingestion.document_service import get_document, set_status
 from app.services.ingestion.loaders import Block, LoaderError, load_document
 from app.services.ingestion.normalize import normalize_blocks
-from app.vectorstore import VectorItem, VectorStoreError, get_vectorstore
 
 _BLOCKS_TTL = 3600
 
@@ -68,7 +68,7 @@ async def _index_chunks(doc: DocumentDoc, blocks: list[Block]) -> int:
     supports embeddings (openai, gemini, openrouter) — falls back to the
     server-wide default otherwise. This has to match whatever the uploader (or anyone else
     querying this workspace) embeds their questions with, or retrieval breaks;
-    see app.embeddings.providers for the tradeoff.
+    see app.rag.embeddings.providers for the tradeoff.
     """
     if not settings.pinecone_api_key:
         # ponytail: lets local dev work with no Pinecone configured; the

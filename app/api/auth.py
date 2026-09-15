@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_current_user
 from app.core.errors import AppError, BadRequestError
 from app.core.security import create_access_token
-from app.llm.model_catalog import ModelCatalogError, list_models
-from app.llm.providers import is_supported_provider
 from app.models.user import UserDoc
+from app.rag.llm.model_catalog import ModelCatalogError, list_models
+from app.rag.llm.providers import is_supported_provider
 from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest, UserOut
 from app.schemas.llm import ListModelsRequest, LLMConfigOut, ModelListOut, SetLLMConfigRequest
 from app.services.auth_service import authenticate_user, register_user

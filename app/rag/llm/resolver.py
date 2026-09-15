@@ -1,8 +1,8 @@
 from app.core.config import settings
 from app.core.crypto import decrypt
-from app.llm import build_llm, get_llm
-from app.llm.base import LLM
 from app.models.user import UserDoc
+from app.rag.llm import build_llm, get_llm
+from app.rag.llm.base import LLM
 
 
 async def get_llm_for_user(user: UserDoc) -> LLM | None:

@@ -9,8 +9,8 @@ from app.core.errors import BadRequestError, NotFoundError
 from app.core.logging import log
 from app.db.mongo import get_db
 from app.models.document import DocStatus, DocumentDoc
+from app.rag.vectorstore import VectorStoreError, get_vectorstore
 from app.services.ingestion.validation import validate_upload
-from app.vectorstore import VectorStoreError, get_vectorstore
 
 _SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
 

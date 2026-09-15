@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from app.core.config import settings
 from app.core.errors import AppError
 from app.core.logging import log
-from app.embeddings.base import EmbeddingError
-from app.embeddings.resolver import get_embedder_for_user
-from app.llm.base import LLMError
-from app.llm.resolver import get_llm_for_user
 from app.models.user import UserDoc
-from app.services.rag.context import Citation, build_context
-from app.services.rag.prompt import SYSTEM_PROMPT, build_user_prompt
-from app.services.rag.retrieval import retrieve_chunks
+from app.rag.context import Citation, build_context
+from app.rag.embeddings.base import EmbeddingError
+from app.rag.embeddings.resolver import get_embedder_for_user
+from app.rag.llm.base import LLMError
+from app.rag.llm.resolver import get_llm_for_user
+from app.rag.prompt import SYSTEM_PROMPT, build_user_prompt
+from app.rag.retrieval import retrieve_chunks
 
 _NO_INDEX_ANSWER = (
     "I don't have any indexed documents to answer that from yet. "
@@ -44,7 +44,7 @@ async def answer_question(
     Both the embedder and the LLM are resolved per-user: their own configured
     provider/key if they have one, else the server-wide default. For the
     embedder this only matters if the provider actually offers embeddings
-    (openai, gemini, openrouter) — see app.embeddings.resolver for what a
+    (openai, gemini, openrouter) — see app.rag.embeddings.resolver for what a
     mismatched provider does to retrieval.
     """
     if not settings.pinecone_api_key:

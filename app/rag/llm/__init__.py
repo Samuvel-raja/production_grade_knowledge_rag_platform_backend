@@ -1,14 +1,14 @@
 from app.core.config import settings
-from app.llm.base import LLM, LLMError
-from app.llm.openai_llm import OpenAILLM
-from app.llm.providers import PROVIDERS, build_llm, default_model_for, is_supported_provider
+from app.rag.llm.base import LLM, LLMError
+from app.rag.llm.openai_llm import OpenAILLM
+from app.rag.llm.providers import PROVIDERS, build_llm, default_model_for, is_supported_provider
 
 _llm: LLM | None = None
 
 
 def get_llm() -> LLM:
     """Server-wide default LLM, built from LLM_PROVIDER/LLM_API_KEY/LLM_MODEL.
-    Per-workspace overrides are resolved separately — see app.llm.resolver."""
+    Per-workspace overrides are resolved separately — see app.rag.llm.resolver."""
     global _llm
     if _llm is None:
         _llm = build_llm(

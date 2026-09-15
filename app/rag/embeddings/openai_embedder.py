@@ -3,7 +3,7 @@ from typing import Any
 from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from app.embeddings.base import EmbeddingError
+from app.rag.embeddings.base import EmbeddingError
 
 _BATCH_SIZE = 96
 

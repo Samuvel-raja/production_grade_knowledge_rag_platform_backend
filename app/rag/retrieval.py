@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.core.errors import AppError
-from app.vectorstore import VectorStoreError, get_vectorstore
+from app.rag.vectorstore import VectorStoreError, get_vectorstore
 
 
 @dataclass

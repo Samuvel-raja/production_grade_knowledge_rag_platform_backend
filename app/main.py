@@ -9,9 +9,9 @@ from app.core.errors import install_error_handlers
 from app.core.logging import RequestContextMiddleware, configure_logging, log
 from app.db.mongo import close_mongo, connect_mongo, get_client
 from app.db.redis import close_redis, connect_redis, get_redis
-from app.llm.providers import PROVIDERS
+from app.rag.llm.providers import PROVIDERS
+from app.rag.vectorstore import init_vectorstore
 from app.services.ingestion.document_service import ensure_document_indexes
-from app.vectorstore import init_vectorstore
 
 
 @asynccontextmanager

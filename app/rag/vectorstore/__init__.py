@@ -1,7 +1,7 @@
 from app.core.config import settings
 from app.core.logging import log
-from app.vectorstore.base import VectorItem, VectorStore, VectorStoreError
-from app.vectorstore.pinecone_store import PineconeStore
+from app.rag.vectorstore.base import VectorItem, VectorStore, VectorStoreError
+from app.rag.vectorstore.pinecone_store import PineconeStore
 
 _store: VectorStore | None = None
 
